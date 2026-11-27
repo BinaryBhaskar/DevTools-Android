@@ -6,7 +6,6 @@ enum class Toggle(val key: SettingKey) {
     USB_DEBUGGING(SettingKey(SettingsTable.GLOBAL, "adb_enabled")),
     WIRELESS_DEBUGGING(SettingKey(SettingsTable.GLOBAL, "adb_wifi_enabled")),
     STAY_AWAKE(SettingKey(SettingsTable.GLOBAL, "stay_on_while_plugged_in")),
-    SHOW_TAPS(SettingKey(SettingsTable.SYSTEM, "show_touches")),
 }
 
 /** The three window/transition/animator scales, changed together. */

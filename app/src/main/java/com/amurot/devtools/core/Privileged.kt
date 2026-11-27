@@ -10,10 +10,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Optional shell-level access through Shizuku or root.
  *
- * DevTools uses it for two things:
- *  1. Granting itself WRITE_SECURE_SETTINGS without a computer (`pm grant`).
- *  2. Settings Android won't let any app write, even with that grant (Show taps lives in a
- *     non-public part of Settings.System), by running `settings put` as shell or root.
+ * DevTools uses it to grant itself WRITE_SECURE_SETTINGS without a computer (`pm grant`).
  */
 object Privileged {
     private const val TAG = "DevTools"
@@ -51,9 +48,6 @@ object Privileged {
         return ok
     }
 
-    /** True when some privileged path is usable right now. */
-    fun available(context: Context): Boolean = shizukuReady() || rootEnabled(context)
-
     /** Runs a shell command through Shizuku, or root. Returns true on exit code 0. */
     fun run(context: Context, command: String): Boolean {
         if (shizukuReady()) {
@@ -66,15 +60,6 @@ object Privileged {
 
     fun grantSecureSettings(context: Context): Boolean =
         run(context, "pm grant ${context.packageName} android.permission.WRITE_SECURE_SETTINGS")
-
-    fun putSetting(context: Context, key: SettingKey, value: String): Boolean {
-        val table = when (key.table) {
-            SettingsTable.GLOBAL -> "global"
-            SettingsTable.SYSTEM -> "system"
-        }
-        // Keys and values are DevTools' own constants, never user input.
-        return run(context, "settings put $table ${key.name} $value")
-    }
 
     private fun runWithShizuku(command: String): Int = try {
         // Shizuku 13 hides newProcess behind its UserService API; the method is still there and

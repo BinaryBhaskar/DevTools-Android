@@ -89,13 +89,13 @@ class DevTogglesTest {
     @Test fun `nothing is written without the permission`() {
         granted = false
         assertEquals(Problem.NO_PERMISSION, toggles.toggleAll().problem)
-        assertEquals(Problem.NO_PERMISSION, toggles.toggle(Toggle.SHOW_TAPS).problem)
+        assertEquals(Problem.NO_PERMISSION, toggles.toggle(Toggle.STAY_AWAKE).problem)
         assertTrue(store.values.isEmpty())
     }
 
     @Test fun `refused writes are reported`() {
         store.refuse = true
-        assertEquals(Problem.WRITE_REFUSED, toggles.toggle(Toggle.SHOW_TAPS).problem)
+        assertEquals(Problem.WRITE_REFUSED, toggles.toggle(Toggle.STAY_AWAKE).problem)
     }
 
     @Test fun `animation scale cycles and writes all three keys`() {

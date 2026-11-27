@@ -5,7 +5,6 @@
     <string name="tile_wireless">Wireless debugging</string>
     <string name="tile_all">Dev + ADB + Wireless</string>
     <string name="tile_stay_awake">Stay awake</string>
-    <string name="tile_show_taps">Show taps</string>
     <string name="tile_animations">Animations</string>
     <string name="widget_panel">DevTools panel</string>
     <string name="widget_short_dev">Dev opts</string>

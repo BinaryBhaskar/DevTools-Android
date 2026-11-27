@@ -12,7 +12,7 @@ import android.widget.Toast
 import com.amurot.devtools.widget.WidgetRefresher
 
 /** Everything a tile, widget or screen can do. */
-enum class DevAction { DEV_OPTIONS, USB_DEBUGGING, WIRELESS_DEBUGGING, ALL, STAY_AWAKE, SHOW_TAPS, ANIMATIONS }
+enum class DevAction { DEV_OPTIONS, USB_DEBUGGING, WIRELESS_DEBUGGING, ALL, STAY_AWAKE, ANIMATIONS }
 
 /**
  * Android-facing entry point: runs [DevAction]s through [DevToggles], then refreshes
@@ -22,7 +22,7 @@ class DevController(context: Context) {
     val app: Context = context.applicationContext
 
     val toggles = DevToggles(
-        store = AndroidSettingsStore(app.contentResolver) { key, value -> Privileged.putSetting(app, key, value) },
+        store = AndroidSettingsStore(app.contentResolver),
         hasPermission = ::hasPermission,
         isWifiConnected = ::isWifiConnected,
     )
@@ -42,7 +42,6 @@ class DevController(context: Context) {
         DevAction.WIRELESS_DEBUGGING -> toggles.isOn(Toggle.WIRELESS_DEBUGGING)
         DevAction.ALL -> toggles.isAllOn()
         DevAction.STAY_AWAKE -> toggles.isOn(Toggle.STAY_AWAKE)
-        DevAction.SHOW_TAPS -> toggles.isOn(Toggle.SHOW_TAPS)
         DevAction.ANIMATIONS -> toggles.animationScale() != 0f
     }
 
@@ -61,7 +60,6 @@ class DevController(context: Context) {
             DevAction.WIRELESS_DEBUGGING -> toggles.toggle(Toggle.WIRELESS_DEBUGGING)
             DevAction.ALL -> toggles.toggleAll()
             DevAction.STAY_AWAKE -> toggles.toggle(Toggle.STAY_AWAKE)
-            DevAction.SHOW_TAPS -> toggles.toggle(Toggle.SHOW_TAPS)
             DevAction.ANIMATIONS -> toggles.cycleAnimationScale()
         }
         if (showFeedback) outcome.problem?.let { toast(message(it, action)) }
@@ -71,12 +69,9 @@ class DevController(context: Context) {
 
     fun set(toggle: Toggle, on: Boolean): Outcome =
         toggles.set(toggle, on).also {
-            it.problem?.let { p -> toast(message(p, if (toggle == Toggle.SHOW_TAPS) DevAction.SHOW_TAPS else null)) }
+            it.problem?.let { p -> toast(message(p, null)) }
             refreshSurfaces()
         }
-
-    /** Show taps can only be written through Shizuku or root on current Android versions. */
-    fun canShowTaps(): Boolean = Privileged.available(app)
 
     fun setAll(on: Boolean): Outcome =
         toggles.setAll(on).also { it.problem?.let { p -> toast(message(p, DevAction.ALL)) }; refreshSurfaces() }
@@ -94,9 +89,7 @@ class DevController(context: Context) {
         Problem.NO_WIFI ->
             if (action == DevAction.ALL) "Developer options and USB debugging are on. Connect to Wi-Fi for wireless debugging."
             else "Connect to Wi-Fi to turn on wireless debugging."
-        Problem.WRITE_REFUSED ->
-            if (action == DevAction.SHOW_TAPS) "Android blocks apps from changing Show taps. Set up Shizuku or root in DevTools to use it."
-            else "Android refused this change on this device."
+        Problem.WRITE_REFUSED -> "Android refused this change on this device."
     }
 
     private fun toast(text: String) {

@@ -1,7 +1,7 @@
 package com.amurot.devtools.core
 
 /** The two Android settings tables DevTools writes to. */
-enum class SettingsTable { GLOBAL, SYSTEM }
+enum class SettingsTable { GLOBAL }
 
 /** A key in one of the Android settings tables. */
 data class SettingKey(val table: SettingsTable, val name: String)

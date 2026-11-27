@@ -15,13 +15,13 @@
 - Primary user: Amurot (for daily use), then other Android developers.
 - Core job: single-tap Developer options, USB debugging, wireless debugging, and all three together, from Quick Settings and home-screen widgets.
 - Mechanism: `WRITE_SECURE_SETTINGS`, granted once over adb (instructions in the app), or by DevTools itself through Shizuku or root ("No computer?" path, added at the owner's request for users who won't use adb).
-- Show taps (`Settings.System.show_touches`) is not a public System setting: apps can't write it even with the grant (verified on a Samsung S25 Edge, Android 16). DevTools writes it with `settings put` through Shizuku or root; without either, the switch is disabled with an explanation.
+- Show taps was dropped: `show_touches` isn't writable by apps (even with the grant), and the Shizuku workaround was unreliable when a tile tap cold-starts the app.
 
 ## v1 scope
-- Tiles: Developer options, USB debugging, Wireless debugging, All 3, Stay awake, Show taps, Animations (cycles 1x › 0.5x › Off).
+- Tiles: Developer options, USB debugging, Wireless debugging, All 3, Stay awake, Animations (cycles 1x › 0.5x › Off).
 - Widgets: a 4×1 panel, plus 1×1 for All 3, Dev options, USB and Wireless.
 - In-app: setup guide with copyable command, live switches, add-tile/add-widget buttons, About.
-- Picked from the interview: Stay awake + Show taps, Animation scale.
+- Picked from the interview: Stay awake + Show taps, Animation scale (Show taps later dropped, see above).
 - Not in v1: wireless ADB IP:port card, layout bounds/GPU overdraw (system properties, unreliable).
 
 ## Brand

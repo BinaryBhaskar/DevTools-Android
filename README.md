@@ -12,7 +12,6 @@ DevTools gives you single-tap switches for the developer settings you flip all d
 | **USB debugging** | ADB over a cable. Also turns on Developer options |
 | **Wireless debugging** | ADB over Wi-Fi (Android 11+). Also turns on Developer options |
 | **Stay awake** | The screen stays on while charging |
-| **Show taps** | Shows a dot for each touch, for demos and screen recordings (needs Shizuku or root, see below) |
 | **Animations** | Cycles all three animation scales: 1x › 0.5x › Off |
 
 Widgets: a 4×1 **panel** (All 3 · Dev opts · ADB · Wi-Fi ADB) and single 1×1 buttons for each of the four
@@ -44,11 +43,6 @@ instead of a cable.
 
 After that the tiles and widgets work even when Shizuku isn't running.
 
-### Show taps
-
-Android lets apps write only the public part of `Settings.System`, and `show_touches` isn't in it.
-`WRITE_SECURE_SETTINGS` doesn't help. DevTools changes it through Shizuku (Shizuku must be running) or
-root. Without either, the Show taps switch stays disabled and the app explains why.
 
 ### Behaviour notes
 
