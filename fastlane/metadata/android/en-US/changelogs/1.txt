@@ -1,0 +1,1 @@
+First release: one-tap tiles and widgets for Developer options, USB debugging, wireless debugging and all three together, plus Stay awake, Show taps and Animation scale.

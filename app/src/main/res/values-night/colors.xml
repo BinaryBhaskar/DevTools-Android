@@ -1,0 +1,7 @@
+<resources>
+    <color name="window_bg">#0E1411</color>
+    <color name="widget_on_bg">#39D98A</color>
+    <color name="widget_on_fg">#04210F</color>
+    <color name="widget_off_bg">#1D2622</color>
+    <color name="widget_off_fg">#DDE6E0</color>
+</resources>

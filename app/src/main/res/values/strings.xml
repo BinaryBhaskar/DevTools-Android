@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">DevTools</string>
+    <string name="tile_dev_options">Developer options</string>
+    <string name="tile_usb">USB debugging</string>
+    <string name="tile_wireless">Wireless debugging</string>
+    <string name="tile_all">Dev + ADB + Wireless</string>
+    <string name="tile_stay_awake">Stay awake</string>
+    <string name="tile_show_taps">Show taps</string>
+    <string name="tile_animations">Animations</string>
+    <string name="widget_panel">DevTools panel</string>
+    <string name="widget_short_dev">Dev opts</string>
+    <string name="widget_short_usb">ADB</string>
+    <string name="widget_short_wireless">Wi-Fi ADB</string>
+    <string name="widget_short_all">All 3</string>
+    <string name="widget_desc_single">One tap to toggle</string>
+    <string name="widget_desc_panel">All three switches plus the combo</string>
+</resources>
