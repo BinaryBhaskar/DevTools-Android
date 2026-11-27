@@ -13,5 +13,7 @@
     <string name="widget_short_wireless">Wi-Fi ADB</string>
     <string name="widget_short_all">All 3</string>
     <string name="widget_desc_single">One tap to toggle</string>
+    <string name="preview_on">On</string>
+    <string name="preview_off">Off</string>
     <string name="widget_desc_panel">All three switches plus the combo</string>
 </resources>
