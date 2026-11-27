@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -152,11 +155,21 @@ fun HomeScreen() {
                 title = {
                     Column {
                         Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold)
-                        Text(
-                            "by Amurot",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                "by",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            AmurotLogo(Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                "Amurot",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
                 },
                 scrollBehavior = scroll,
@@ -531,9 +544,20 @@ private fun AddRow(label: String, icon: ImageVector = Icons.Rounded.Add, onAdd: 
 private fun AboutCard(context: Context) {
     ToggleGroup {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("DevTools ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AmurotLogo(Modifier.size(36.dp))
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text("DevTools ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "by Amurot",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
             Text(
-                "Made by Amurot. Free and open source under the Apache License 2.0. No ads, no tracking, no internet access.",
+                "Free and open source under the Apache License 2.0. No ads, no tracking, no internet access.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -544,6 +568,16 @@ private fun AboutCard(context: Context) {
             }
         }
     }
+}
+
+@Composable
+private fun AmurotLogo(modifier: Modifier = Modifier) {
+    Image(
+        painter = painterResource(R.drawable.ic_amurot_logo),
+        contentDescription = "Amurot",
+        modifier = modifier,
+        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+    )
 }
 
 // ---- Android helpers ----

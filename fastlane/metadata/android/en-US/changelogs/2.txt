@@ -1,0 +1,1 @@
+Widget picker shows real previews. Amurot logo in the app. Show taps removed: Android doesn't let apps change it reliably.
