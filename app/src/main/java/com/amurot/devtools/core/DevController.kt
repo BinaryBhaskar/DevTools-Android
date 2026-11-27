@@ -19,10 +19,10 @@ enum class DevAction { DEV_OPTIONS, USB_DEBUGGING, WIRELESS_DEBUGGING, ALL, STAY
  * every tile and widget so they all show the new state.
  */
 class DevController(context: Context) {
-    private val app = context.applicationContext
+    val app: Context = context.applicationContext
 
     val toggles = DevToggles(
-        store = AndroidSettingsStore(app.contentResolver),
+        store = AndroidSettingsStore(app.contentResolver) { key, value -> Privileged.putSetting(app, key, value) },
         hasPermission = ::hasPermission,
         isWifiConnected = ::isWifiConnected,
     )
@@ -70,7 +70,13 @@ class DevController(context: Context) {
     }
 
     fun set(toggle: Toggle, on: Boolean): Outcome =
-        toggles.set(toggle, on).also { it.problem?.let { p -> toast(message(p, null)) }; refreshSurfaces() }
+        toggles.set(toggle, on).also {
+            it.problem?.let { p -> toast(message(p, if (toggle == Toggle.SHOW_TAPS) DevAction.SHOW_TAPS else null)) }
+            refreshSurfaces()
+        }
+
+    /** Show taps can only be written through Shizuku or root on current Android versions. */
+    fun canShowTaps(): Boolean = Privileged.available(app)
 
     fun setAll(on: Boolean): Outcome =
         toggles.setAll(on).also { it.problem?.let { p -> toast(message(p, DevAction.ALL)) }; refreshSurfaces() }
@@ -88,7 +94,9 @@ class DevController(context: Context) {
         Problem.NO_WIFI ->
             if (action == DevAction.ALL) "Developer options and USB debugging are on. Connect to Wi-Fi for wireless debugging."
             else "Connect to Wi-Fi to turn on wireless debugging."
-        Problem.WRITE_REFUSED -> "Android refused this change on this device."
+        Problem.WRITE_REFUSED ->
+            if (action == DevAction.SHOW_TAPS) "Android blocks apps from changing Show taps. Set up Shizuku or root in DevTools to use it."
+            else "Android refused this change on this device."
     }
 
     private fun toast(text: String) {

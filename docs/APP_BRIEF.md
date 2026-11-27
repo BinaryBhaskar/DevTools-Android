@@ -14,7 +14,8 @@
 ## Product
 - Primary user: Amurot (for daily use), then other Android developers.
 - Core job: single-tap Developer options, USB debugging, wireless debugging, and all three together, from Quick Settings and home-screen widgets.
-- Mechanism: `WRITE_SECURE_SETTINGS`, granted once over adb (instructions in the app).
+- Mechanism: `WRITE_SECURE_SETTINGS`, granted once over adb (instructions in the app), or by DevTools itself through Shizuku or root ("No computer?" path, added at the owner's request for users who won't use adb).
+- Show taps (`Settings.System.show_touches`) is not a public System setting: apps can't write it even with the grant (verified on a Samsung S25 Edge, Android 16). DevTools writes it with `settings put` through Shizuku or root; without either, the switch is disabled with an explanation.
 
 ## v1 scope
 - Tiles: Developer options, USB debugging, Wireless debugging, All 3, Stay awake, Show taps, Animations (cycles 1x › 0.5x › Off).
@@ -39,3 +40,4 @@
 - Play Store first: WRITE_SECURE_SETTINGS apps face policy friction; F-Droid fits open source better.
 - Glance widgets: RemoteViews are lighter and simpler for one-tap buttons.
 - Hilt/Room: no data to store, one screen.
+- Shizuku UserService/AIDL: one-off `sh -c` commands via Shizuku's (hidden) newProcess are enough; kept by an R8 rule.

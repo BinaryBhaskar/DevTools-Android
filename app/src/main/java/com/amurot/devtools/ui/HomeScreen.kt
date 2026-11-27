@@ -47,6 +47,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -63,6 +64,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -82,9 +84,16 @@ import com.amurot.devtools.BuildConfig
 import com.amurot.devtools.R
 import com.amurot.devtools.core.AnimationScale
 import com.amurot.devtools.core.DevController
+import com.amurot.devtools.core.Privileged
+import com.amurot.devtools.core.Privileged.ShizukuState
 import com.amurot.devtools.core.Toggle
 import com.amurot.devtools.tile.TileRefresher
 import com.amurot.devtools.widget.WidgetRefresher
+import android.content.pm.PackageManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import rikka.shizuku.Shizuku
 
 const val REPO_URL = "https://github.com/BinaryBhaskar/DevTools-Android"
 
@@ -94,6 +103,8 @@ private data class DevState(
     val on: Map<Toggle, Boolean> = emptyMap(),
     val allOn: Boolean = false,
     val animationScale: Float = 1f,
+    val privileged: Boolean = false,
+    val shizuku: ShizukuState = ShizukuState.NOT_INSTALLED,
 )
 
 private fun DevController.snapshot() = DevState(
@@ -102,6 +113,8 @@ private fun DevController.snapshot() = DevState(
     on = Toggle.entries.associateWith { toggles.isOn(it) },
     allOn = toggles.isAllOn(),
     animationScale = toggles.animationScale(),
+    privileged = canShowTaps(),
+    shizuku = Privileged.shizukuState(app),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -112,6 +125,17 @@ fun HomeScreen() {
     var state by remember { mutableStateOf(controller.snapshot()) }
     val refresh = { state = controller.snapshot() }
 
+    // Shizuku connects asynchronously; refresh when its binder arrives or goes away.
+    DisposableEffect(Unit) {
+        val received = Shizuku.OnBinderReceivedListener { refresh() }
+        val dead = Shizuku.OnBinderDeadListener { refresh() }
+        Shizuku.addBinderReceivedListenerSticky(received)
+        Shizuku.addBinderDeadListener(dead)
+        onDispose {
+            Shizuku.removeBinderReceivedListener(received)
+            Shizuku.removeBinderDeadListener(dead)
+        }
+    }
     DisposableEffect(Unit) {
         val observer = DevController.observe(context) { refresh() }
         onDispose { context.contentResolver.unregisterContentObserver(observer) }
@@ -151,7 +175,7 @@ fun HomeScreen() {
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item { if (state.granted) GrantedBanner() else SetupCard(onCheck = refresh) }
+            item { if (state.granted) GrantedBanner() else SetupCard(state, onCheck = refresh) }
 
             item { SectionTitle("One-tap switches") }
             item {
@@ -178,10 +202,16 @@ fun HomeScreen() {
                 ToggleGroup {
                     ToggleRow(Icons.Rounded.Lightbulb, "Stay awake", "Screen never sleeps while charging",
                         state.on[Toggle.STAY_AWAKE] == true, state.granted) { controller.set(Toggle.STAY_AWAKE, it); refresh() }
-                    ToggleRow(Icons.Rounded.TouchApp, "Show taps", "Visual feedback for touches, for demos and recordings",
-                        state.on[Toggle.SHOW_TAPS] == true, state.granted) { controller.set(Toggle.SHOW_TAPS, it); refresh() }
+                    ToggleRow(Icons.Rounded.TouchApp, "Show taps",
+                        if (state.privileged) "Visual feedback for touches, for demos and recordings"
+                        else "Needs Shizuku or root: Android blocks apps from this one",
+                        state.on[Toggle.SHOW_TAPS] == true, state.granted && state.privileged) { controller.set(Toggle.SHOW_TAPS, it); refresh() }
                     AnimationRow(state.animationScale, state.granted) { controller.setAnimationScale(it); refresh() }
                 }
+            }
+
+            if (state.granted && !state.privileged) {
+                item { ShowTapsUnlockCard(state, onDone = refresh) }
             }
 
             item { SectionTitle("Quick Settings tiles") }
@@ -225,7 +255,7 @@ private fun GrantedBanner() {
 }
 
 @Composable
-private fun SetupCard(onCheck: () -> Unit) {
+private fun SetupCard(state: DevState, onCheck: () -> Unit) {
     val context = LocalContext.current
     val command = "adb shell pm grant ${context.packageName} android.permission.WRITE_SECURE_SETTINGS"
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
@@ -254,7 +284,106 @@ private fun SetupCard(onCheck: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            HorizontalDivider()
+            Text("No computer?", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(
+                "If you use Shizuku or your phone is rooted, DevTools can grant itself the permission. " +
+                    "This also unlocks Show taps.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            ShellAccessButtons(state, grantPermission = true, onDone = onCheck)
         }
+    }
+}
+
+@Composable
+private fun ShowTapsUnlockCard(state: DevState, onDone: () -> Unit) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Unlock Show taps", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(
+                "Android doesn't let apps change Show taps, even with the adb grant. DevTools can switch it " +
+                    "through Shizuku (keep Shizuku running) or root.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            ShellAccessButtons(state, grantPermission = false, onDone = onDone)
+        }
+    }
+}
+
+/**
+ * Shizuku and root buttons. With [grantPermission], DevTools then runs `pm grant` on itself;
+ * otherwise it only switches the privileged path on (for Show taps).
+ */
+@Composable
+private fun ShellAccessButtons(state: DevState, grantPermission: Boolean, onDone: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var busy by remember { mutableStateOf(false) }
+
+    val finish: (String) -> Unit = { method ->
+        scope.launch {
+            busy = true
+            val ok = !grantPermission || withContext(Dispatchers.IO) { Privileged.grantSecureSettings(context) }
+            busy = false
+            val text = when {
+                !ok -> "$method couldn't grant the permission. Try the adb command instead."
+                grantPermission -> "Permission granted with $method."
+                else -> "Show taps now works through $method."
+            }
+            Toast.makeText(context, text, Toast.LENGTH_LONG).show()
+            onDone()
+        }
+    }
+
+    DisposableEffect(grantPermission) {
+        val listener = Shizuku.OnRequestPermissionResultListener { _, result ->
+            if (result == PackageManager.PERMISSION_GRANTED) finish("Shizuku") else onDone()
+        }
+        Shizuku.addRequestPermissionResultListener(listener)
+        onDispose { Shizuku.removeRequestPermissionResultListener(listener) }
+    }
+
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(
+            enabled = !busy,
+            modifier = Modifier.weight(1f),
+            onClick = {
+                when (state.shizuku) {
+                    ShizukuState.NOT_INSTALLED -> context.openUrl(Privileged.SHIZUKU_URL)
+                    ShizukuState.NOT_RUNNING -> {
+                        Toast.makeText(context, "Start Shizuku, then come back here.", Toast.LENGTH_LONG).show()
+                        context.packageManager.getLaunchIntentForPackage(Privileged.SHIZUKU_PACKAGE)
+                            ?.let { context.startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                    }
+                    ShizukuState.NEEDS_PERMISSION -> Privileged.requestShizuku()
+                    ShizukuState.READY -> finish("Shizuku")
+                }
+            },
+        ) {
+            Text(
+                when (state.shizuku) {
+                    ShizukuState.NOT_INSTALLED -> "Get Shizuku"
+                    ShizukuState.NOT_RUNNING -> "Start Shizuku"
+                    else -> "Use Shizuku"
+                },
+            )
+        }
+        OutlinedButton(
+            enabled = !busy,
+            modifier = Modifier.weight(1f),
+            onClick = {
+                scope.launch {
+                    busy = true
+                    val rooted = withContext(Dispatchers.IO) { Privileged.enableRoot(context) }
+                    busy = false
+                    if (rooted) finish("root")
+                    else Toast.makeText(context, "Root access isn't available.", Toast.LENGTH_LONG).show()
+                }
+            },
+        ) { Text("Use root") }
     }
 }
 

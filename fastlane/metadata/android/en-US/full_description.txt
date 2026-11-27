@@ -3,11 +3,11 @@
 <li><b>Dev + ADB + Wireless</b>: turn Developer options, USB debugging and wireless debugging on or off together</li>
 <li><b>Developer options</b>, <b>USB debugging</b> and <b>Wireless debugging</b> as separate switches</li>
 <li><b>Stay awake</b> while charging</li>
-<li><b>Show taps</b> for demos and screen recordings</li>
+<li><b>Show taps</b> for demos and screen recordings (with Shizuku or root)</li>
 <li><b>Animations</b>: cycle the animation scales 1x › 0.5x › Off</li>
 </ul>
 <p>Widgets: a 4×1 panel plus single 1×1 buttons. They stay in sync when you change a setting anywhere else.</p>
 <p><b>One-time setup:</b> DevTools needs the WRITE_SECURE_SETTINGS permission, granted once from a computer:<br/>
 <tt>adb shell pm grant com.amurot.devtools android.permission.WRITE_SECURE_SETTINGS</tt><br/>
-The app walks you through it.</p>
+The app walks you through it. No computer? Grant it in one tap with <b>Shizuku</b> or <b>root</b>.</p>
 <p>No internet permission, no ads, no tracking. Open source under Apache 2.0. Made by Amurot.</p>
